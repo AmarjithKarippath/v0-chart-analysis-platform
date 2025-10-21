@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "./header"
 import { Watchlist } from "./watchlist"
 import { ChartArea } from "./chart-area"
+import { GoogleSignInDialog } from "./google-signin-dialog"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Stock, Watchlist as WatchlistType } from "@/lib/types"
 
 const initialStocks: Stock[] = [
@@ -123,7 +125,51 @@ export default function ChartPlatform() {
   ])
   const [activeWatchlistId, setActiveWatchlistId] = useState<string>("default")
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [clickCount, setClickCount] = useState(0)
+  const [showSignInDialog, setShowSignInDialog] = useState(false)
+
   const activeWatchlist = watchlists.find((w) => w.id === activeWatchlistId) || watchlists[0]
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient()
+
+      if (!supabase) {
+        const authStatus = localStorage.getItem("isAuthenticated")
+        if (authStatus === "true") {
+          setIsAuthenticated(true)
+          setUserEmail(localStorage.getItem("userEmail"))
+        }
+        return
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session) {
+        setIsAuthenticated(true)
+        setUserEmail(session.user.email || null)
+        console.log("[v0] User authenticated:", session.user.email)
+      }
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsAuthenticated(!!session)
+        setUserEmail(session?.user.email || null)
+        if (session) {
+          console.log("[v0] Auth state changed:", session.user.email)
+          setClickCount(0)
+        }
+      })
+
+      return () => subscription.unsubscribe()
+    }
+
+    checkAuth()
+  }, [])
 
   const handleCreateWatchlist = (name: string) => {
     const newWatchlist: WatchlistType = {
@@ -136,7 +182,7 @@ export default function ChartPlatform() {
   }
 
   const handleDeleteWatchlist = (id: string) => {
-    if (watchlists.length === 1) return // Don't delete the last watchlist
+    if (watchlists.length === 1) return
     const filtered = watchlists.filter((w) => w.id !== id)
     setWatchlists(filtered)
     if (activeWatchlistId === id) {
@@ -152,7 +198,6 @@ export default function ChartPlatform() {
     setWatchlists(
       watchlists.map((w) => {
         if (w.id === targetWatchlistId) {
-          // Check if stock already exists in the watchlist
           const stockExists = w.stocks.some((s) => s.symbol === stock.symbol)
           if (!stockExists) {
             return { ...w, stocks: [...w.stocks, stock] }
@@ -163,15 +208,58 @@ export default function ChartPlatform() {
     )
   }
 
+  const handleStockSelect = (stock: Stock) => {
+    setSelectedStock(stock)
+
+    if (!isAuthenticated) {
+      const newClickCount = clickCount + 1
+      setClickCount(newClickCount)
+
+      if (newClickCount > 3) {
+        setShowSignInDialog(true)
+      }
+    }
+  }
+
+  const handleSignIn = () => {
+    setShowSignInDialog(true)
+  }
+
+  const handleSignOut = async () => {
+    const supabase = getSupabaseClient()
+
+    if (supabase) {
+      await supabase.auth.signOut()
+      console.log("[v0] User signed out")
+    } else {
+      localStorage.removeItem("isAuthenticated")
+      localStorage.removeItem("userEmail")
+    }
+
+    setIsAuthenticated(false)
+    setUserEmail(null)
+    setClickCount(0)
+  }
+
+  const handleDialogSignIn = () => {
+    setIsAuthenticated(true)
+    setClickCount(0)
+  }
+
   return (
     <div className="flex h-screen flex-col bg-background">
-      <Header />
+      <Header
+        isAuthenticated={isAuthenticated}
+        userEmail={userEmail}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+      />
       <div className="flex flex-1 overflow-hidden">
         <Watchlist
           watchlists={watchlists}
           activeWatchlistId={activeWatchlistId}
           selectedStock={selectedStock}
-          onSelectStock={setSelectedStock}
+          onSelectStock={handleStockSelect}
           onSelectWatchlist={setActiveWatchlistId}
           onCreateWatchlist={handleCreateWatchlist}
           onDeleteWatchlist={handleDeleteWatchlist}
@@ -180,6 +268,7 @@ export default function ChartPlatform() {
         />
         <ChartArea stock={selectedStock} />
       </div>
+      <GoogleSignInDialog open={showSignInDialog} onOpenChange={setShowSignInDialog} onSignIn={handleDialogSignIn} />
     </div>
   )
 }
