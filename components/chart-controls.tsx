@@ -53,15 +53,15 @@ export function ChartControls({ timeframe, onTimeframeChange }: ChartControlsPro
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>{currentTime}</span>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        {/* <Button variant="ghost" size="icon" className="h-7 w-7">
           <Percent className="h-3 w-3" />
-        </Button>
-        <Button variant="ghost" size="sm" className="h-7 text-xs">
+        </Button> */}
+        {/* <Button variant="ghost" size="sm" className="h-7 text-xs">
           log
         </Button>
         <Button variant="ghost" size="sm" className="h-7 text-xs text-primary">
           auto
-        </Button>
+        </Button> */}
       </div>
     </div>
   )
