@@ -25,9 +25,9 @@ export function ChartControls({ timeframe, onTimeframeChange }: ChartControlsPro
             {tf}
           </Button>
         ))}
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        {/* <Button variant="ghost" size="icon" className="h-7 w-7">
           <Calendar className="h-3 w-3" />
-        </Button>
+        </Button> */}
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

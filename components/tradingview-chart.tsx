@@ -36,8 +36,11 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
         textColor: "#9ca3af",
       },
       grid: {
-        vertLines: { color: "rgba(128, 128, 128, 0.1)" },
-        horzLines: { color: "rgba(128, 128, 128, 0.1)" },
+        vertLines: { color: "rgba(255, 255, 255, 1)" },
+        horzLines: { color: "rgba(255, 255, 255, 1)" },
+
+        // vertLines: { color: "rgba(128, 128, 128, 0.1)" },
+        // horzLines: { color: "rgba(128, 128, 128, 0.1)" },
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
@@ -97,7 +100,7 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
     })
 
     // Generate and set data
-    const chartData = generateCandlestickData(stock.price, 150)
+    const chartData = generateCandlestickData(stock.price, 200)
     const candleData = chartData.map((candle, index) => ({
       time: (Date.now() / 1000 - (chartData.length - index) * 3600) as any,
       open: candle.open,
@@ -106,14 +109,14 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
       close: candle.close,
     }))
 
-    const volumeData = chartData.map((candle, index) => ({
-      time: (Date.now() / 1000 - (chartData.length - index) * 3600) as any,
-      value: candle.volume,
-      color: candle.close >= candle.open ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)",
-    }))
+    // const volumeData = chartData.map((candle, index) => ({
+    //   time: (Date.now() / 1000 - (chartData.length - index) * 3600) as any,
+    //   value: candle.volume,
+    //   color: candle.close >= candle.open ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)",
+    // }))
 
     candlestickSeries.setData(candleData)
-    volumeSeries.setData(volumeData)
+    // volumeSeries.setData(volumeData)
 
     // Fit content
     chart.timeScale().fitContent()
@@ -139,7 +142,7 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
   return (
     <div className="relative h-full w-full">
       {/* Drawing tools sidebar */}
-      <div className="absolute left-0 top-0 z-10 flex flex-col gap-1 p-2">
+      {/* <div className="absolute left-0 top-0 z-10 flex flex-col gap-1 p-2">
         <Button variant="ghost" size="icon" className="h-8 w-8 bg-card hover:bg-accent">
           <Crosshair className="h-4 w-4" />
         </Button>
@@ -173,10 +176,10 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
         <Button variant="ghost" size="icon" className="h-8 w-8 bg-card hover:bg-accent">
           <Trash2 className="h-4 w-4" />
         </Button>
-      </div>
+      </div> */}
 
       {/* Price info overlay */}
-      <div className="absolute left-16 top-4 z-10 rounded-md bg-card/80 px-3 py-2 backdrop-blur-sm">
+      {/* <div className="absolute left-16 top-4 z-10 rounded-md bg-card/80 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-medium text-primary">{stock.price.toFixed(2)}</span>
@@ -195,7 +198,7 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
           <span>Volume</span>
           <span className="font-medium">0</span>
         </div>
-      </div>
+      </div> */}
 
       {/* TradingView chart container */}
       <div ref={chartContainerRef} className="h-full w-full" />
