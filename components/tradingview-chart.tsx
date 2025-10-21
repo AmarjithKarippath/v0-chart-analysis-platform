@@ -98,7 +98,7 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
     })
 
     // Generate and set initial data
-    const chartData = generateCandlestickData(stock.price, 200)
+    const chartData = generateCandlestickData(stock.price, 130)
     const candleData = chartData.map((candle, index) => ({
       time: (Date.now() / 1000 - (chartData.length - index) * 3600) as any,
       open: candle.open,
