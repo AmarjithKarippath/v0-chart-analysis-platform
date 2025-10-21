@@ -105,7 +105,7 @@ const initialStocks: Stock[] = [
   { symbol: "AHT", name: "Ashtead Group", price: 5678.0, change: 48.5, changePercent: 0.86, index: "LSE" },
   { symbol: "BNKR", name: "Banker Investment Trust", price: 1234.0, change: 12.5, changePercent: 1.02, index: "LSE" },
   { symbol: "BKGH", name: "Berkeley Group Holdings", price: 4567.0, change: 38.5, changePercent: 0.85, index: "LSE" },
-  { symbol: "BNZL", name: "Beazley", price: 678.5, change: 8.5, changePercent: 1.27, index: "LSE" },
+  { symbol: "BEZ", name: "Beazley", price: 678.5, change: 8.5, changePercent: 1.27, index: "LSE" },
   { symbol: "CTEC", name: "Convatec Group", price: 234.5, change: 3.5, changePercent: 1.52, index: "LSE" },
   { symbol: "DARK", name: "Darktrace", price: 456.5, change: -8.5, changePercent: -1.83, index: "LSE" },
   { symbol: "DPLM", name: "Diploma", price: 3456.0, change: 28.5, changePercent: 0.83, index: "LSE" },
