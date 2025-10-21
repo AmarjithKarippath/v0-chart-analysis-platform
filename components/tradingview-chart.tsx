@@ -1,14 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import {
-  createChart,
-  ColorType,
-  CandlestickSeries,
-  HistogramSeries,
-  type IChartApi,
-  type ISeriesApi,
-} from "lightweight-charts"
+import { createChart, ColorType, CandlestickSeries, type IChartApi, type ISeriesApi } from "lightweight-charts"
 import type { Stock } from "@/lib/types"
 import { generateCandlestickData } from "@/lib/chart-data"
 
@@ -22,13 +15,15 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null)
-  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null)
   const earliestTimeRef = useRef<number>(0)
   const isLoadingRef = useRef<boolean>(false)
   const allDataRef = useRef<any[]>([])
+  const isInitializedRef = useRef<boolean>(false)
 
   useEffect(() => {
     if (!chartContainerRef.current) return
+
+    isInitializedRef.current = false
 
     // Create chart
     const chart = createChart(chartContainerRef.current, {
@@ -37,8 +32,8 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
         textColor: "#9ca3af",
       },
       grid: {
-        vertLines: { color: "rgba(255, 255, 255, 1)" },
-        horzLines: { color: "rgba(255, 255, 255, 1)" },
+        vertLines: { color: "rgba(255, 255, 255, 0.1)" },
+        horzLines: { color: "rgba(255, 255, 255, 0.1)" },
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
@@ -79,24 +74,6 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
 
     candlestickSeriesRef.current = candlestickSeries
 
-    // Add volume series
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      color: "#26a69a",
-      priceFormat: {
-        type: "volume",
-      },
-      priceScaleId: "",
-    })
-
-    volumeSeriesRef.current = volumeSeries
-
-    chart.priceScale("").applyOptions({
-      scaleMargins: {
-        top: 0.8,
-        bottom: 0,
-      },
-    })
-
     // Generate and set initial data
     const chartData = generateCandlestickData(stock.price, 130)
     const candleData = chartData.map((candle, index) => ({
@@ -112,16 +89,17 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
 
     candlestickSeries.setData(candleData)
 
-    // Fit content
-    chart.timeScale().fitContent()
+    setTimeout(() => {
+      chart.timeScale().fitContent()
+      isInitializedRef.current = true
+    }, 100)
 
     const handleVisibleLogicalRangeChange = (logicalRange: any) => {
-      if (!logicalRange || isLoadingRef.current) return
+      if (!logicalRange || isLoadingRef.current || !isInitializedRef.current) return
 
-      // Check if user is scrolling near the left edge (first 20% of visible range)
+      // Check if user is scrolling near the left edge
       const barsInfo = candlestickSeries.barsInLogicalRange(logicalRange)
       if (barsInfo !== null && barsInfo.barsBefore < 50) {
-        console.log("[v0] Loading more historical data...")
         loadMoreHistoricalData()
       }
     }
@@ -148,10 +126,7 @@ export function TradingViewChart({ stock, timeframe }: TradingViewChartProps) {
       // Prepend new data to existing data
       allDataRef.current = [...newCandleData, ...allDataRef.current]
 
-      // Update the series with all data
       candlestickSeries.setData(allDataRef.current)
-
-      console.log("[v0] Loaded 100 more candles. Total:", allDataRef.current.length)
 
       // Reset loading flag after a short delay
       setTimeout(() => {

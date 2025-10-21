@@ -40,6 +40,7 @@ export function Watchlist({
   onRenameWatchlist,
   onAddStockToWatchlist,
 }: WatchlistProps) {
+  const [searchQuery, setSearchQuery] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [newWatchlistName, setNewWatchlistName] = useState("")
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
@@ -47,6 +48,17 @@ export function Watchlist({
   const [renameValue, setRenameValue] = useState("")
 
   const activeWatchlist = watchlists.find((w) => w.id === activeWatchlistId) || watchlists[0]
+
+  const filteredStocks = activeWatchlist.stocks.filter((stock) => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      stock.symbol.toLowerCase().includes(query) ||
+      stock.name.toLowerCase().includes(query) ||
+      stock.index.toLowerCase().includes(query)
+    )
+  })
+
   const totalStocks = activeWatchlist.stocks.length
 
   const handleCreateWatchlist = () => {
@@ -78,7 +90,12 @@ export function Watchlist({
         <div className="border-b border-border p-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search eg: shel, bp, ftse 100, etc" className="h-9 pl-8 text-xs" />
+            <Input
+              placeholder="Search eg: shel, bp, ftse 100, etc"
+              className="h-9 pl-8 text-xs"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
@@ -182,63 +199,71 @@ export function Watchlist({
         </Dialog>
 
         <div className="flex-1 overflow-y-auto">
-          {activeWatchlist.stocks.map((stock) => (
-            <div
-              key={stock.symbol}
-              className={cn(
-                "flex w-full items-center justify-between border-b border-border transition-colors hover:bg-accent group",
-                selectedStock.symbol === stock.symbol && "bg-accent",
-              )}
-            >
-              <button
-                onClick={() => onSelectStock(stock)}
-                className="flex flex-1 items-center justify-between px-3 py-3 text-left"
+          {filteredStocks.length > 0 ? (
+            filteredStocks.map((stock) => (
+              <div
+                key={stock.symbol}
+                className={cn(
+                  "flex w-full items-center justify-between border-b border-border transition-colors hover:bg-accent group",
+                  selectedStock.symbol === stock.symbol && "bg-accent",
+                )}
               >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">{stock.symbol}</span>
-                  <span className="text-xs text-muted-foreground">{stock.index}</span>
-                </div>
-                <div className="flex flex-col items-end gap-0.5">
-                  <span className={cn("text-xs font-medium", stock.change >= 0 ? "text-success" : "text-destructive")}>
-                    {stock.change >= 0 ? "+" : ""}
-                    {stock.change.toFixed(2)}
-                  </span>
-                  <span className={cn("text-xs", stock.change >= 0 ? "text-success" : "text-destructive")}>
-                    {stock.changePercent >= 0 ? "+" : ""}
-                    {stock.changePercent.toFixed(2)}%
-                  </span>
-                  <span className="text-xs font-semibold">{stock.price.toFixed(2)}</span>
-                </div>
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 mr-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {watchlists
-                    .filter((w) => w.id !== activeWatchlistId)
-                    .map((watchlist) => (
-                      <DropdownMenuItem key={watchlist.id} onClick={() => onAddStockToWatchlist(stock, watchlist.id)}>
-                        <FolderPlus className="mr-2 h-3 w-3" />
-                        Add to {watchlist.name}
+                <button
+                  onClick={() => onSelectStock(stock)}
+                  className="flex flex-1 items-center justify-between px-3 py-3 text-left"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium">{stock.symbol}</span>
+                    <span className="text-xs text-muted-foreground">{stock.index}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span
+                      className={cn("text-xs font-medium", stock.change >= 0 ? "text-success" : "text-destructive")}
+                    >
+                      {stock.change >= 0 ? "+" : ""}
+                      {stock.change.toFixed(2)}
+                    </span>
+                    <span className={cn("text-xs", stock.change >= 0 ? "text-success" : "text-destructive")}>
+                      {stock.changePercent >= 0 ? "+" : ""}
+                      {stock.changePercent.toFixed(2)}%
+                    </span>
+                    <span className="text-xs font-semibold">{stock.price.toFixed(2)}</span>
+                  </div>
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 mr-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {watchlists
+                      .filter((w) => w.id !== activeWatchlistId)
+                      .map((watchlist) => (
+                        <DropdownMenuItem key={watchlist.id} onClick={() => onAddStockToWatchlist(stock, watchlist.id)}>
+                          <FolderPlus className="mr-2 h-3 w-3" />
+                          Add to {watchlist.name}
+                        </DropdownMenuItem>
+                      ))}
+                    {watchlists.filter((w) => w.id !== activeWatchlistId).length === 0 && (
+                      <DropdownMenuItem disabled>
+                        <span className="text-xs text-muted-foreground">No other watchlists</span>
                       </DropdownMenuItem>
-                    ))}
-                  {watchlists.filter((w) => w.id !== activeWatchlistId).length === 0 && (
-                    <DropdownMenuItem disabled>
-                      <span className="text-xs text-muted-foreground">No other watchlists</span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center justify-center p-8 text-center">
+              <p className="text-sm text-muted-foreground">No stocks found matching "{searchQuery}"</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </aside>

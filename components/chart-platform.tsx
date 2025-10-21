@@ -115,7 +115,9 @@ const initialStocks: Stock[] = [
 ]
 
 export default function ChartPlatform() {
-  const [selectedStock, setSelectedStock] = useState<Stock>(initialStocks[0])
+  const [selectedStock, setSelectedStock] = useState<Stock>(
+    initialStocks.find((stock) => stock.symbol === "AZN") || initialStocks[0],
+  )
   const [watchlists, setWatchlists] = useState<WatchlistType[]>([
     { id: "default", name: "Default", stocks: initialStocks },
   ])
